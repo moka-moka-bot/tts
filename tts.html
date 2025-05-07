@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>テキスト読み上げツール（TTS）</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    textarea { width: 90%; height: 100px; font-size: 16px; }
+    select, input[type="range"] { width: 80%; margin: 10px 0; }
+    label { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>🔊 テキスト読み上げツール（TTS）</h2>
+
+<textarea id="text" placeholder="ここに読み上げたいテキストを入力してください"></textarea>
+
+<label>音声を選ぶ：
+  <select id="voiceSelect"></select>
+</label>
+
+<label>速度（1.0 = 標準）：
+  <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+</label>
+
+<label>高さ（ピッチ）：
+  <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+</label>
+
+<br>
+<button onclick="speak()">🔈 読み上げる</button>
+<button onclick="stop()">⏹ 停止</button>
+
+<script>
+  const textInput = document.getElementById('text');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const rateInput = document.getElementById('rate');
+  const pitchInput = document.getElementById('pitch');
+  let voices = [];
+
+  function populateVoices() {
+    voices = speechSynthesis.getVoices();
+    voiceSelect.innerHTML = '';
+    voices.forEach((voice, i) => {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      voiceSelect.appendChild(option);
+    });
+  }
+
+  populateVoices();
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.onvoiceschanged = populateVoices;
+  }
+
+  function speak() {
+    const utterance = new SpeechSynthesisUtterance(textInput.value);
+    utterance.voice = voices[voiceSelect.value];
+    utterance.rate = parseFloat(rateInput.value);
+    utterance.pitch = parseFloat(pitchInput.value);
+    speechSynthesis.speak(utterance);
+  }
+
+  function stop() {
+    speechSynthesis.cancel();
+  }
+</script>
+
+</body>
+</html>
