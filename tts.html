@@ -2,19 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>テキスト読み上げツール（TTS）</title>
+  <title>テキスト読み上げ・音声認識ツール</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     textarea { width: 90%; height: 100px; font-size: 16px; }
     select, input[type="range"] { width: 80%; margin: 10px 0; }
     label { display: block; margin-top: 10px; }
+    .summary-box { margin-top: 10px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
   </style>
 </head>
 <body>
 
-<h2>🔊 テキスト読み上げツール（TTS）</h2>
+<h2>🔊 テキスト読み上げ・🎤音声入力ツール</h2>
 
-<textarea id="text" placeholder="ここに読み上げたいテキストを入力してください"></textarea>
+<textarea id="text" placeholder="ここにテキストを入力、または音声で入力してください"></textarea>
+
+<div>
+  <button onclick="startRecognition()">🎤 話す（音声入力）</button>
+  <button onclick="stopRecognition()">⏹ 音声入力停止</button>
+</div>
 
 <label>音声を選ぶ：
   <select id="voiceSelect"></select>
@@ -39,6 +45,7 @@
   const pitchInput = document.getElementById('pitch');
   let voices = [];
 
+  // 音声合成の音声一覧を取得
   function populateVoices() {
     voices = speechSynthesis.getVoices();
     voiceSelect.innerHTML = '';
@@ -65,6 +72,38 @@
 
   function stop() {
     speechSynthesis.cancel();
+  }
+
+  // 音声認識の設定（Web Speech API）
+  let recognition;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ja-JP';  // 日本語
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = function(event) {
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          textInput.value += event.results[i][0].transcript + '\n';
+        }
+      }
+    };
+
+    recognition.onerror = function(event) {
+      alert('音声認識エラー：' + event.error);
+    };
+  } else {
+    alert('このブラウザは音声認識に対応していません。Google Chromeをお使いください。');
+  }
+
+  function startRecognition() {
+    if (recognition) recognition.start();
+  }
+
+  function stopRecognition() {
+    if (recognition) recognition.stop();
   }
 </script>
 
